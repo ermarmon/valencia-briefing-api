@@ -1,0 +1,67 @@
+# feeds.yaml — Fuentes del Valencia Briefing
+#
+# Ubicación en HA OS: /config/valencia_briefing_feeds.yaml
+# (la carpeta /config es accesible desde el File Editor de HA)
+#
+# Campos por fuente:
+#   name:     nombre legible, aparece en la salida JSON
+#   url:      URL directa del feed RSS o Atom
+#   type:     "news" o "event"
+#   enabled:  true/false — desactiva sin borrar la fuente
+#   priority: 1 (alta) a 3 (baja) — afecta al scoring final
+
+keywords:
+  # Términos que aumentan el score de una entrada.
+  # Además del filtrado, si la entrada menciona alguno de estos términos
+  # en título o resumen, sube en el ranking final.
+  valencia:
+    - "valencia"
+    - "valència"
+    - "valencian"
+    - "comunitat valenciana"
+    - "comunidad valenciana"
+  boost:
+    - "ayuntamiento"
+    - "generalitat"
+    - "albufera"
+    - "turia"
+    - "fallas"
+    - "feria"
+    - "mercado"
+
+sources:
+  # ── Prensa local ─────────────────────────────────────────────────────────
+  - name: "Las Provincias"
+    url: "https://www.lasprovincias.es/rss/2.0/index.xml"
+    type: news
+    enabled: true
+    priority: 1
+
+  - name: "Levante-EMV"
+    url: "https://www.levante-emv.com/rss/"
+    type: news
+    enabled: true
+    priority: 1
+
+  - name: "Valencia Plaza"
+    url: "https://valenciaplaza.com/rss/"
+    type: news
+    enabled: true
+    priority: 2
+
+  - name: "El Periódico CV"
+    url: "https://www.elperiodic.com/feed/rss_valencia.xml"
+    type: news
+    enabled: true
+    priority: 2
+
+  # ── Agenda / Eventos ─────────────────────────────────────────────────────
+  # Si el Ayuntamiento publica feed Atom/RSS de su agenda, añádelo aquí.
+  # Por ahora se obtiene vía API OpenDataSoft en events.py directamente.
+  # Deja este bloque de ejemplo para cuando tengas una URL de feed real.
+  # - name: "Agenda Ayuntamiento Valencia"
+  #   url: "https://www.valencia.es/agenda.rss"
+  #   type: event
+  #   enabled: false
+  #   priority: 1
+

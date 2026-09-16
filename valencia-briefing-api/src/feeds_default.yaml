@@ -1,0 +1,46 @@
+# feeds_default.yaml — Fuentes por defecto empaquetadas en la imagen.
+# Este archivo se usa SOLO si no hay feeds.yaml en /data ni en /config.
+# Para personalizar, edita /config/valencia_briefing_feeds.yaml desde
+# el File Editor de Home Assistant.
+
+keywords:
+  valencia:
+    - "valencia"
+    - "valència"
+    - "valencian"
+    - "comunitat valenciana"
+    - "comunidad valenciana"
+  boost:
+    - "ayuntamiento"
+    - "generalitat"
+    - "albufera"
+    - "turia"
+    - "fallas"
+    - "feria"
+    - "mercado"
+
+sources:
+  - name: "Las Provincias"
+    url: "https://www.lasprovincias.es/rss/2.0/index.xml"
+    type: news
+    enabled: true
+    priority: 1
+
+  - name: "Levante-EMV"
+    url: "https://www.levante-emv.com/rss/2.0/portada.xml"
+    type: news
+    enabled: true
+    priority: 1
+
+  - name: "Valencia Plaza"
+    url: "https://valenciaplaza.com/rss.xml"
+    type: news
+    enabled: true
+    priority: 2
+
+  - name: "El Periódico CV"
+    url: "https://www.elperiodic.com/valencia/rss"
+    type: news
+    enabled: true
+    priority: 2
+
