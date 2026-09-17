@@ -1,5 +1,5 @@
 name: Valencia Briefing API v2
-version: "2.1.0"
+version: "2.1.1"
 slug: valencia_briefing_api
 description: >
   Agregador local de noticias y eventos de Valencia.

@@ -1,5 +1,5 @@
 """
-app.py — Valencia Briefing API v2.1.0
+app.py — Valencia Briefing API v2.1.1
 
 Endpoints:
   GET  /                    → healthcheck con versión y opciones activas
@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Valencia Briefing API",
-    version="2.1.0",
+    version="2.1.1",
     description="Agregador local de noticias y eventos de Valencia para Home Assistant",
 )
 
@@ -86,7 +86,7 @@ def root():
     return {
         "status": "ok",
         "service": "valencia-briefing-api",
-        "version": "2.1.0",
+        "version": "2.1.1",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "config": {
             "max_items": MAX_ITEMS,
@@ -180,14 +180,9 @@ def save_briefing_history(payload: BriefingHistoryInput):
             text=payload.text,
             briefing_id=payload.briefing_id,
         )
-        return JSONResponse(
-            content={
-                "item": entry,
-                "stored": created,
-                "retention_limit": BRIEFING_HISTORY_LIMIT,
-            },
-            status_code=201 if created else 200,
-        )
+        # Home Assistant's rest_command only needs acknowledgement.
+        # avoids keeping a response body open on the Supervisor network.
+        return Response(status_code=204)
     except Exception as exc:
         logger.exception("Error guardando el historial de briefings")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
