@@ -23,6 +23,7 @@ CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/config"))
 FEEDS_YAML_PATH = DATA_DIR / "feeds.yaml"
 FEEDS_DEFAULT_PATH = Path("/app/src/feeds_default.yaml")
 CACHE_FILE_PATH = DATA_DIR / "briefing_cache.json"
+HISTORY_FILE_PATH = DATA_DIR / "briefing_history.json"
 OPTIONS_FILE_PATH = DATA_DIR / "options.json"
 
 # ── Defaults de opciones ─────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ _DEFAULTS: dict = {
     "max_items": 20,
     "max_age_hours": 48,
     "cache_ttl_minutes": 60,
+    "briefing_history_limit": 3,
     "log_level": "info",
 }
 
@@ -51,4 +53,5 @@ OPTIONS: dict = _load_options()
 MAX_ITEMS: int = int(OPTIONS["max_items"])
 MAX_AGE_HOURS: int = int(OPTIONS["max_age_hours"])
 CACHE_TTL_MINUTES: int = int(OPTIONS["cache_ttl_minutes"])
+BRIEFING_HISTORY_LIMIT: int = int(OPTIONS["briefing_history_limit"])
 LOG_LEVEL: str = OPTIONS["log_level"].upper()
