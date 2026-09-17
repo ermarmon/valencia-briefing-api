@@ -14,7 +14,7 @@ elif [ ! -f /data/feeds.yaml ]; then
     cp /app/src/feeds_default.yaml /data/feeds.yaml
 fi
 
-echo "[vb2] Valencia Briefing API v2.0.0 arrancando en puerto 8099..."
+echo "[vb2] Valencia Briefing API v2.1.0 arrancando en puerto 8099..."
 exec python3 -m uvicorn src.app:app \
     --host 0.0.0.0 \
     --port 8099 \

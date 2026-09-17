@@ -1,11 +1,13 @@
 """
-app.py — Valencia Briefing API v2.0.0
+app.py — Valencia Briefing API v2.1.0
 
 Endpoints:
   GET  /                    → healthcheck con versión y opciones activas
   GET  /valencia_briefing   → briefing completo (con caché persistente)
   GET  /refresh             → fuerza regeneración invalidando caché
   GET  /debug               → igual que /valencia_briefing pero con info de fuentes
+  GET  /briefing_history    → últimos briefings generados
+  POST /briefing_history    → registra el briefing enviado por Home Assistant
 """
 
 from __future__ import annotations
@@ -13,11 +15,18 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
-from . import cache_store, pipeline
-from .settings import CACHE_TTL_MINUTES, LOG_LEVEL, MAX_AGE_HOURS, MAX_ITEMS, OPTIONS
+from . import cache_store, history_store, pipeline
+from .settings import (
+    BRIEFING_HISTORY_LIMIT,
+    CACHE_TTL_MINUTES,
+    LOG_LEVEL,
+    MAX_AGE_HOURS,
+    MAX_ITEMS,
+)
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -29,9 +38,16 @@ logger = logging.getLogger(__name__)
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Valencia Briefing API",
-    version="2.0.0",
+    version="2.1.0",
     description="Agregador local de noticias y eventos de Valencia para Home Assistant",
 )
+
+
+class BriefingHistoryInput(BaseModel):
+    """Mensaje final del briefing, una vez enviado por Home Assistant."""
+
+    text: str = Field(min_length=1, max_length=12000)
+    briefing_id: str | None = Field(default=None, max_length=100)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -70,12 +86,13 @@ def root():
     return {
         "status": "ok",
         "service": "valencia-briefing-api",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "config": {
             "max_items": MAX_ITEMS,
             "max_age_hours": MAX_AGE_HOURS,
             "cache_ttl_minutes": CACHE_TTL_MINUTES,
+            "briefing_history_limit": BRIEFING_HISTORY_LIMIT,
         },
     }
 
@@ -125,4 +142,52 @@ def debug():
         return JSONResponse(content=data)
     except Exception as exc:
         logger.exception("Error en /debug")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/briefing_history")
+def briefing_history(
+    limit: int = Query(default=BRIEFING_HISTORY_LIMIT, ge=1, le=10),
+):
+    """
+    Devuelve los últimos briefings completos, del más reciente al más antiguo.
+
+    La automatización puede usar estos textos como contexto para pedir una
+    redacción distinta al modelo de IA.
+    """
+    try:
+        entries = history_store.list_entries(limit)
+        return {
+            "items": entries,
+            "count": len(entries),
+            "retention_limit": BRIEFING_HISTORY_LIMIT,
+        }
+    except Exception as exc:
+        logger.exception("Error leyendo el historial de briefings")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/briefing_history")
+def save_briefing_history(payload: BriefingHistoryInput):
+    """
+    Registra el texto final que Home Assistant ha enviado por TTS.
+
+    briefing_id es opcional, pero se recomienda usar la fecha local
+    (por ejemplo, 2026-09-17) para hacer la operación idempotente.
+    """
+    try:
+        entry, created = history_store.record(
+            text=payload.text,
+            briefing_id=payload.briefing_id,
+        )
+        return JSONResponse(
+            content={
+                "item": entry,
+                "stored": created,
+                "retention_limit": BRIEFING_HISTORY_LIMIT,
+            },
+            status_code=201 if created else 200,
+        )
+    except Exception as exc:
+        logger.exception("Error guardando el historial de briefings")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
